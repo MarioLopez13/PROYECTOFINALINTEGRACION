@@ -1,1 +1,185 @@
-# docker compose will be added later
+x-service-environment: &service-environment
+  DB_USERNAME: ${DB_USERNAME:-campus}
+  DB_PASSWORD: ${DB_PASSWORD:-campus}
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_PORT: 5672
+  RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-campus}
+  RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-campus}
+
+x-service-depends-on: &service-depends-on
+  rabbitmq:
+    condition: service_healthy
+
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-campus}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-campus}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  academic-db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: academic_db
+      MYSQL_USER: ${DB_USERNAME:-campus}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-campus}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+    ports:
+      - "3307:3306"
+    volumes:
+      - academic-db-data:/var/lib/mysql
+
+  payment-db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: payment_db
+      MYSQL_USER: ${DB_USERNAME:-campus}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-campus}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+    ports:
+      - "3308:3306"
+    volumes:
+      - payment-db-data:/var/lib/mysql
+
+  attendance-db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: attendance_db
+      MYSQL_USER: ${DB_USERNAME:-campus}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-campus}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+    ports:
+      - "3309:3306"
+    volumes:
+      - attendance-db-data:/var/lib/mysql
+
+  notification-db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: notification_db
+      MYSQL_USER: ${DB_USERNAME:-campus}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-campus}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+    ports:
+      - "3310:3306"
+    volumes:
+      - notification-db-data:/var/lib/mysql
+
+  analytics-db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: analytics_db
+      MYSQL_USER: ${DB_USERNAME:-campus}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-campus}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+    ports:
+      - "3311:3306"
+    volumes:
+      - analytics-db-data:/var/lib/mysql
+
+  academic-service:
+    build: ./backend/services/academic-service
+    environment:
+      <<: *service-environment
+      DB_URL: jdbc:mysql://academic-db:3306/academic_db?serverTimezone=UTC
+      SERVER_PORT: 8081
+    ports:
+      - "8081:8081"
+    depends_on:
+      <<: *service-depends-on
+      academic-db:
+        condition: service_started
+
+  payment-service:
+    build: ./backend/services/payment-service
+    environment:
+      <<: *service-environment
+      DB_URL: jdbc:mysql://payment-db:3306/payment_db?serverTimezone=UTC
+      SERVER_PORT: 8082
+    ports:
+      - "8082:8082"
+    depends_on:
+      <<: *service-depends-on
+      payment-db:
+        condition: service_started
+
+  attendance-service:
+    build: ./backend/services/attendance-service
+    environment:
+      <<: *service-environment
+      DB_URL: jdbc:mysql://attendance-db:3306/attendance_db?serverTimezone=UTC
+      SERVER_PORT: 8083
+    ports:
+      - "8083:8083"
+    depends_on:
+      <<: *service-depends-on
+      attendance-db:
+        condition: service_started
+
+  notification-service:
+    build: ./backend/services/notification-service
+    environment:
+      <<: *service-environment
+      DB_URL: jdbc:mysql://notification-db:3306/notification_db?serverTimezone=UTC
+      SERVER_PORT: 8084
+    ports:
+      - "8084:8084"
+    depends_on:
+      <<: *service-depends-on
+      notification-db:
+        condition: service_started
+
+  analytics-service:
+    build: ./backend/services/analytics-service
+    environment:
+      <<: *service-environment
+      DB_URL: jdbc:mysql://analytics-db:3306/analytics_db?serverTimezone=UTC
+      SERVER_PORT: 8085
+    ports:
+      - "8085:8085"
+    depends_on:
+      <<: *service-depends-on
+      analytics-db:
+        condition: service_started
+
+  gateway:
+    build: ./backend/gateway
+    environment:
+      ACADEMIC_SERVICE_URL: http://academic-service:8081
+      PAYMENT_SERVICE_URL: http://payment-service:8082
+      ATTENDANCE_SERVICE_URL: http://attendance-service:8083
+      NOTIFICATION_SERVICE_URL: http://notification-service:8084
+      ANALYTICS_SERVICE_URL: http://analytics-service:8085
+    ports:
+      - "8080:8080"
+    depends_on:
+      - academic-service
+      - payment-service
+      - attendance-service
+      - notification-service
+      - analytics-service
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - gateway
+
+volumes:
+  rabbitmq-data:
+  academic-db-data:
+  payment-db-data:
+  attendance-db-data:
+  notification-db-data:
+  analytics-db-data:

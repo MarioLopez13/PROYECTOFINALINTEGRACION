@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: analytics-service
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/analytics_db?createDatabaseIfNotExist=true&serverTimezone=UTC}
+    username: ${DB_USERNAME:campus}
+    password: ${DB_PASSWORD:campus}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:campus}
+    password: ${RABBITMQ_PASSWORD:campus}
+
+server:
+  port: ${SERVER_PORT:8085}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
