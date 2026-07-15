@@ -14,6 +14,14 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USERNAME:campus}
     password: ${RABBITMQ_PASSWORD:campus}
+    listener:
+      simple:
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          initial-interval: 1s
+          max-attempts: 3
+          multiplier: 2
 
 server:
   port: ${SERVER_PORT:8081}

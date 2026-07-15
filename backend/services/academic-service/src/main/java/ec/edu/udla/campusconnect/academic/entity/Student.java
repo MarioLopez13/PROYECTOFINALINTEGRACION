@@ -102,6 +102,10 @@ public class Student {
         this.status = StudentStatus.INACTIVE;
     }
 
+    public void markFinancialStatus(String financialStatus) {
+        this.financialStatus = financialStatus;
+    }
+
     public Long getId() {
         return id;
     }

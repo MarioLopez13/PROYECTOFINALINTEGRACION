@@ -7,10 +7,14 @@ import ec.edu.udla.campusconnect.academic.dto.StudentResponse;
 import ec.edu.udla.campusconnect.academic.entity.Enrollment;
 import ec.edu.udla.campusconnect.academic.entity.EnrollmentStatus;
 import ec.edu.udla.campusconnect.academic.entity.Student;
+import ec.edu.udla.campusconnect.academic.entity.StudentEvent;
 import ec.edu.udla.campusconnect.academic.entity.StudentStatus;
 import ec.edu.udla.campusconnect.academic.exception.BusinessRuleException;
 import ec.edu.udla.campusconnect.academic.exception.ResourceNotFoundException;
+import ec.edu.udla.campusconnect.academic.messaging.BusinessEvent;
+import ec.edu.udla.campusconnect.academic.messaging.CampusEventPublisher;
 import ec.edu.udla.campusconnect.academic.repository.EnrollmentRepository;
+import ec.edu.udla.campusconnect.academic.repository.StudentEventRepository;
 import ec.edu.udla.campusconnect.academic.repository.StudentRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +25,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,6 +43,12 @@ class AcademicServiceTest {
 
     @Mock
     private EnrollmentRepository enrollmentRepository;
+
+    @Mock
+    private StudentEventRepository studentEventRepository;
+
+    @Mock
+    private CampusEventPublisher eventPublisher;
 
     @InjectMocks
     private AcademicService academicService;
@@ -104,12 +116,22 @@ class AcademicServiceTest {
         when(studentRepository.findByStudentCode("STU-001")).thenReturn(Optional.of(student));
         when(enrollmentRepository.existsByStudentStudentCodeAndAcademicYear("STU-001", "2026-2027")).thenReturn(false);
         when(enrollmentRepository.save(any(Enrollment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(eventPublisher.publishStudentEnrolled(any(Enrollment.class))).thenReturn(new BusinessEvent(
+                "evt-test",
+                "StudentEnrolled",
+                OffsetDateTime.parse("2026-07-15T10:30:00Z"),
+                "corr-test",
+                "STU-001",
+                Map.of("studentCode", "STU-001")
+        ));
+        when(studentEventRepository.save(any(StudentEvent.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         EnrollmentResponse response = academicService.createEnrollment(request);
 
         assertThat(response.studentCode()).isEqualTo("STU-001");
         assertThat(response.status()).isEqualTo(EnrollmentStatus.ENROLLED);
         assertThat(response.pendingAmount()).isEqualByComparingTo("120.00");
+        verify(eventPublisher).publishStudentEnrolled(any(Enrollment.class));
     }
 
     @Test

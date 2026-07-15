@@ -7,6 +7,7 @@ import ec.edu.udla.campusconnect.payment.entity.Payment;
 import ec.edu.udla.campusconnect.payment.entity.PaymentStatus;
 import ec.edu.udla.campusconnect.payment.exception.BusinessRuleException;
 import ec.edu.udla.campusconnect.payment.exception.ResourceNotFoundException;
+import ec.edu.udla.campusconnect.payment.messaging.CampusEventPublisher;
 import ec.edu.udla.campusconnect.payment.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,9 +18,11 @@ import java.util.List;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
+    private final CampusEventPublisher eventPublisher;
 
-    public PaymentService(PaymentRepository paymentRepository) {
+    public PaymentService(PaymentRepository paymentRepository, CampusEventPublisher eventPublisher) {
         this.paymentRepository = paymentRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -33,13 +36,16 @@ public class PaymentService {
                 request.description(),
                 request.amount()
         );
-        return PaymentResponse.from(paymentRepository.save(payment));
+        Payment savedPayment = paymentRepository.save(payment);
+        eventPublisher.publishPaymentCreated(savedPayment);
+        return PaymentResponse.from(savedPayment);
     }
 
     @Transactional
     public PaymentResponse confirmPayment(String paymentCode, ConfirmPaymentRequest request) {
         Payment payment = findPayment(paymentCode);
         payment.confirm(request.confirmationReference(), request.confirmedAt());
+        eventPublisher.publishPaymentConfirmed(payment);
         return PaymentResponse.from(payment);
     }
 

@@ -5,6 +5,12 @@ spring:
     gateway:
       server:
         webflux:
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowed-origins: "*"
+                allowed-methods: "*"
+                allowed-headers: "*"
           routes:
             - id: academic-service
               uri: ${ACADEMIC_SERVICE_URL:http://localhost:8081}
@@ -29,6 +35,9 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+
+campus:
+  api-key: ${CAMPUS_API_KEY:campus-demo-key}
 
 management:
   endpoints:

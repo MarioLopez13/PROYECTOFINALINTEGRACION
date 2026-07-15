@@ -3,6 +3,7 @@ package ec.edu.udla.campusconnect.academic.controller;
 import ec.edu.udla.campusconnect.academic.dto.CreateEnrollmentRequest;
 import ec.edu.udla.campusconnect.academic.dto.CreateStudentRequest;
 import ec.edu.udla.campusconnect.academic.dto.EnrollmentResponse;
+import ec.edu.udla.campusconnect.academic.dto.StudentEventResponse;
 import ec.edu.udla.campusconnect.academic.dto.StudentResponse;
 import ec.edu.udla.campusconnect.academic.dto.UpdateStudentRequest;
 import ec.edu.udla.campusconnect.academic.service.AcademicService;
@@ -67,5 +68,10 @@ public class AcademicController {
     @GetMapping("/students/{studentCode}/enrollments")
     public List<EnrollmentResponse> getStudentEnrollments(@PathVariable String studentCode) {
         return academicService.getEnrollmentsByStudent(studentCode);
+    }
+
+    @GetMapping("/students/{studentCode}/events")
+    public List<StudentEventResponse> getStudentEvents(@PathVariable String studentCode) {
+        return academicService.getStudentEvents(studentCode);
     }
 }

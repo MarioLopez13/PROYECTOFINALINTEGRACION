@@ -155,6 +155,7 @@ services:
   gateway:
     build: ./backend/gateway
     environment:
+      CAMPUS_API_KEY: ${CAMPUS_API_KEY:-campus-demo-key}
       ACADEMIC_SERVICE_URL: http://academic-service:8081
       PAYMENT_SERVICE_URL: http://payment-service:8082
       ATTENDANCE_SERVICE_URL: http://attendance-service:8083

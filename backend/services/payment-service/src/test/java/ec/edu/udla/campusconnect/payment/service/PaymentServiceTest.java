@@ -7,6 +7,7 @@ import ec.edu.udla.campusconnect.payment.entity.Payment;
 import ec.edu.udla.campusconnect.payment.entity.PaymentStatus;
 import ec.edu.udla.campusconnect.payment.exception.BusinessRuleException;
 import ec.edu.udla.campusconnect.payment.exception.ResourceNotFoundException;
+import ec.edu.udla.campusconnect.payment.messaging.CampusEventPublisher;
 import ec.edu.udla.campusconnect.payment.repository.PaymentRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +30,9 @@ class PaymentServiceTest {
 
     @Mock
     private PaymentRepository paymentRepository;
+
+    @Mock
+    private CampusEventPublisher eventPublisher;
 
     @InjectMocks
     private PaymentService paymentService;
