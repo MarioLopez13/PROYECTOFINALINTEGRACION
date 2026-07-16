@@ -1,5 +1,9 @@
 FROM node:22-alpine AS build
 WORKDIR /app
+ARG VITE_API_BASE_URL=http://localhost:8080
+ARG VITE_API_KEY=campus-demo-key
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_API_KEY=$VITE_API_KEY
 COPY package*.json ./
 RUN npm install
 COPY . .
