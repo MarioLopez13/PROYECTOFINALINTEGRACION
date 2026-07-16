@@ -7,10 +7,21 @@ Copy-Item .env.example .env
 docker compose up --build
 ```
 
+Opcionalmente, crear datos semilla por API:
+
+```powershell
+.\scripts\seed-demo.ps1
+```
+
 Abrir:
 
 - Frontend: http://localhost:5173
 - RabbitMQ: http://localhost:15672
+
+Respaldo tecnico:
+
+- Postman: `postman/CampusConnect360.postman_collection.json`
+- Datos semilla: `docs/seed-data.md`
 
 ## Historia: un dia de operacion
 

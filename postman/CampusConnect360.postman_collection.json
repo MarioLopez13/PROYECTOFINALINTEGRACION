@@ -1,0 +1,174 @@
+{
+  "info": {
+    "_postman_id": "2f62a14e-4f7c-4d96-9d6c-campusconnect360",
+    "name": "CampusConnect360 Demo",
+    "description": "Coleccion de respaldo tecnico para demostrar CampusConnect360: academico, pagos, asistencia, notificaciones, analytics y resiliencia.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "apiKey", "value": "campus-demo-key" },
+    { "key": "studentCode", "value": "STU-POSTMAN-001" },
+    { "key": "paymentCode", "value": "PAY-POSTMAN-001" }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      { "key": "key", "value": "X-API-Key", "type": "string" },
+      { "key": "value", "value": "{{apiKey}}", "type": "string" },
+      { "key": "in", "value": "header", "type": "string" }
+    ]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Gateway health",
+          "request": { "method": "GET", "url": "{{baseUrl}}/actuator/health" }
+        },
+        {
+          "name": "Analytics dashboard",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/analytics/dashboard" }
+        }
+      ]
+    },
+    {
+      "name": "01 Secretaria Academica",
+      "item": [
+        {
+          "name": "Registrar estudiante",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentCode\": \"{{studentCode}}\",\n  \"documentNumber\": \"DOC-POSTMAN-001\",\n  \"firstName\": \"Ana\",\n  \"lastName\": \"Lopez\",\n  \"birthDate\": \"2012-05-10\",\n  \"representativeEmail\": \"ana.postman@example.com\",\n  \"representativePhone\": \"0999999999\"\n}"
+            },
+            "url": "{{baseUrl}}/api/academic/students"
+          }
+        },
+        {
+          "name": "Crear matricula",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentCode\": \"{{studentCode}}\",\n  \"schoolId\": \"SCH-001\",\n  \"grade\": \"8vo EGB\",\n  \"academicYear\": \"2026-2027\",\n  \"pendingAmount\": 120.00\n}"
+            },
+            "url": "{{baseUrl}}/api/academic/enrollments"
+          }
+        },
+        {
+          "name": "Consultar ficha estudiante",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/academic/students/{{studentCode}}" }
+        },
+        {
+          "name": "Consultar historial de eventos",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/academic/students/{{studentCode}}/events" }
+        }
+      ]
+    },
+    {
+      "name": "02 Finanzas",
+      "item": [
+        {
+          "name": "Registrar obligacion de pago",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentCode\": \"{{paymentCode}}\",\n  \"studentCode\": \"{{studentCode}}\",\n  \"description\": \"Matricula inicial\",\n  \"amount\": 120.00\n}"
+            },
+            "url": "{{baseUrl}}/api/payments"
+          }
+        },
+        {
+          "name": "Consultar pagos pendientes",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/payments?status=PENDING" }
+        },
+        {
+          "name": "Confirmar pago",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirmationReference\": \"BANK-POSTMAN-001\",\n  \"confirmedAt\": \"2026-07-16T10:30:00Z\"\n}"
+            },
+            "url": "{{baseUrl}}/api/payments/{{paymentCode}}/confirm"
+          }
+        },
+        {
+          "name": "Consultar pagos confirmados",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/payments?status=CONFIRMED" }
+        }
+      ]
+    },
+    {
+      "name": "03 Bienestar",
+      "item": [
+        {
+          "name": "Registrar asistencia",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentCode\": \"{{studentCode}}\",\n  \"classDate\": \"2026-07-16\",\n  \"type\": \"PRESENT\",\n  \"recordedBy\": \"Docente Demo\",\n  \"notes\": \"Asistencia creada desde Postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/attendance/records"
+          }
+        },
+        {
+          "name": "Registrar incidente",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentCode\": \"{{studentCode}}\",\n  \"severity\": \"MEDIUM\",\n  \"title\": \"Seguimiento academico\",\n  \"description\": \"Incidente demo para evidenciar bienestar\",\n  \"reportedBy\": \"Bienestar Demo\",\n  \"reportedAt\": \"2026-07-16T10:45:00Z\"\n}"
+            },
+            "url": "{{baseUrl}}/api/attendance/incidents"
+          }
+        },
+        {
+          "name": "Consultar historial bienestar",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/attendance/students/{{studentCode}}/history" }
+        }
+      ]
+    },
+    {
+      "name": "04 Notificaciones y Resiliencia",
+      "item": [
+        {
+          "name": "Listar notificaciones",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/notifications" }
+        },
+        {
+          "name": "Fallar siguiente notificacion",
+          "request": { "method": "POST", "url": "{{baseUrl}}/api/notifications/simulate-failure" }
+        },
+        {
+          "name": "Estado falla controlada",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/notifications/simulate-failure" }
+        }
+      ]
+    },
+    {
+      "name": "05 Analytics",
+      "item": [
+        {
+          "name": "Dashboard directivo",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/analytics/dashboard" }
+        },
+        {
+          "name": "Trazabilidad de eventos",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/analytics/events" }
+        }
+      ]
+    }
+  ]
+}
