@@ -1,111 +1,375 @@
-# CampusConnect 360
+# CampusConnect360 – Estado Actual del Proyecto
 
-Ecosistema funcional de integracion para una red de colegios. El proyecto simula
-un dia de operacion con Secretaria Academica, Finanzas, Bienestar/Docentes,
-Notificaciones y Dashboard Directivo conectados por API Gateway, RabbitMQ y bases
-de datos separadas.
+## Proyecto
 
-## Estado implementado
+**CampusConnect360**
 
-- Frontend React operativo con portales de Secretaria, Finanzas, Bienestar y Dashboard.
-- API Gateway Spring Cloud Gateway con seguridad por `X-API-Key`.
-- Academic Service con estudiantes, matriculas, historial de eventos y actualizacion financiera.
-- Payment Service con obligaciones de pago, pagos pendientes y confirmacion.
-- Attendance Service con asistencia e incidentes.
-- Notification Service consumidor de eventos, notificaciones simuladas y falla controlada con DLQ.
-- Analytics Service como proyeccion CQRS para dashboard y trazabilidad.
-- RabbitMQ topic exchange `campus.events` y dead letter exchange `campus.dlx`.
-- Swagger/OpenAPI por servicio y health checks con Actuator.
-- Docker Compose con MySQL independiente por servicio.
+Materia: Integración de Sistemas
 
-## Requisitos
+---
 
-- Java 21 o superior.
-- Maven 3.9+.
-- Node.js 22+.
-- Docker y Docker Compose.
+# Arquitectura elegida
 
-## Ejecucion con Docker Compose
+Después de analizar varias alternativas, se decidió implementar el proyecto utilizando:
 
-```powershell
-Copy-Item .env.example .env
-docker compose up --build
+- Arquitectura de Microservicios.
+- Arquitectura por Capas dentro de cada microservicio.
+
+Cada microservicio será una aplicación Spring Boot independiente y se comunicará mediante:
+
+- REST
+- RabbitMQ (eventos)
+
+El acceso desde el frontend será mediante un API Gateway.
+
+---
+
+# Tecnologías
+
+## Backend
+
+- Java 21
+- Spring Boot 3
+- Maven
+- Spring Data JPA
+- Spring Validation
+- Spring Actuator
+- Springdoc OpenAPI (Swagger)
+
+## Frontend
+
+- React
+- Vite
+- React Router
+
+## Base de datos
+
+- MySQL
+
+Cada microservicio tendrá su propia base de datos.
+
+## Integración
+
+- RabbitMQ
+
+## Infraestructura
+
+- Docker
+- Docker Compose
+
+---
+
+# Decisiones de arquitectura
+
+NO se utilizará:
+
+- Eureka
+- Kubernetes
+- Prometheus
+- Grafana
+- Integración Continua
+
+Porque no forman parte del alcance inicial del proyecto.
+
+---
+
+# Estructura del proyecto
+
+```text
+CampusConnect360/
+
+backend/
+    gateway/
+    services/
+        academic-service/
+        payment-service/
+        attendance-service/
+        notification-service/
+        analytics-service/
+
+frontend/
+
+infrastructure/
+    mysql/
+    rabbitmq/
+    observability/
+
+contracts/
+    asyncapi/
+    openapi/
+    schemas/
+
+docs/
+    architecture/
+    adr/
+    diagrams/
+    deployment/
+
+scripts/
+
+docker-compose.yml
+
+README.md
 ```
 
-URLs principales:
+---
 
-- Frontend: http://localhost:5173
-- API Gateway: http://localhost:8080
-- RabbitMQ Management: http://localhost:15672
-- Academic Swagger: http://localhost:8081/swagger-ui.html
-- Payment Swagger: http://localhost:8082/swagger-ui.html
-- Attendance Swagger: http://localhost:8083/swagger-ui.html
-- Notification Swagger: http://localhost:8084/swagger-ui.html
-- Analytics Swagger: http://localhost:8085/swagger-ui.html
+# Arquitectura interna de cada microservicio
 
-Credenciales y valores demo:
+Cada microservicio utiliza Arquitectura por Capas.
 
-- RabbitMQ: `campus` / `campus`
-- API Key: `campus-demo-key`
-- Header requerido por gateway: `X-API-Key: campus-demo-key`
-- Usuarios de prueba funcionales: las pestanas del frontend representan los roles
-  Secretaria, Finanzas, Bienestar y Direccion. No hay login de usuario final; la
-  seguridad basica se evidencia en el gateway con API key.
+```
+src/main/java/ec/edu/udla/campusconnect/
 
-## Guion de demo
+controller/
 
-1. Abrir el frontend en http://localhost:5173.
-2. En Secretaria, usar `Demo rapida` o registrar estudiante y matricula manualmente.
-3. Verificar en la ficha el evento `StudentEnrolled`.
-4. En Finanzas, crear una deuda y confirmar un pago.
-5. Confirmar que Academic cambia el estado financiero a `PAID`.
-6. En Bienestar, registrar asistencia o incidente.
-7. Revisar notificaciones simuladas.
-8. En Dashboard, revisar indicadores y trazabilidad de eventos.
-9. Para resiliencia, pulsar `Fallar siguiente notificacion` y luego registrar un
-   nuevo evento. Notification Service guarda `NotificationFailed` y el mensaje va
-   a `notification.dead-letter`.
+service/
 
-## Validacion local
+repository/
 
-Frontend:
+entity/
 
-```powershell
-cd frontend
-npm install
-npm run lint
-npm run build
+dto/
+
+mapper/
+
+messaging/
+
+config/
+
+exception/
+
+Application.java
 ```
 
-Backend, desde cada modulo:
+---
 
-```powershell
-mvn test
+# Frontend
+
+Se decidió utilizar **UN SOLO** proyecto React.
+
+No existirán cuatro aplicaciones React independientes.
+
+Dentro del frontend existirán módulos como:
+
+```
+features/
+
+academic/
+
+payments/
+
+attendance/
+
+notifications/
+
+analytics/
 ```
 
-Modulos:
+---
 
-- `backend/gateway`
-- `backend/services/academic-service`
-- `backend/services/payment-service`
-- `backend/services/attendance-service`
-- `backend/services/notification-service`
-- `backend/services/analytics-service`
+# Lo que YA estaba implementado (Base Técnica)
 
-## Servicios y eventos
+✔ React + Vite
 
-| Servicio | Responsabilidad | Eventos |
-| --- | --- | --- |
-| Academic | Estudiantes, matriculas, estado financiero, historial | Publica `StudentEnrolled`, consume `PaymentConfirmed`, publica `StudentStatusUpdated` |
-| Payment | Obligaciones y confirmacion de pagos | Publica `PaymentCreated`, `PaymentConfirmed` |
-| Attendance | Asistencia, ausencias, atrasos e incidentes | Publica `AttendanceRecorded`, `IncidentReported` |
-| Notification | Notificaciones simuladas e incidentes de entrega | Consume eventos de negocio, publica `NotificationSent`, `NotificationFailed` |
-| Analytics | Vista consolidada y trazabilidad | Consume todos los eventos de `campus.events` |
-| Gateway | Entrada centralizada y API key | Enruta `/api/**` |
+✔ Spring Cloud Gateway
 
-Mas detalle en:
+✔ Cinco microservicios Spring Boot
 
-- `docs/architecture/README.md`
-- `contracts/events.md`
-- `docs/demo-guide.md`
-- `docs/bitacora.md`
+✔ Dockerfiles
+
+✔ Docker Compose
+
+✔ RabbitMQ preparado
+
+✔ MySQL preparado
+
+✔ Swagger preparado
+
+✔ Spring Actuator
+
+✔ Health Checks
+
+✔ Arquitectura por capas
+
+✔ Estructura de carpetas definitiva
+
+✔ .gitignore
+
+✔ README
+
+---
+
+# Lo que NO estaba implementado en esa fase
+
+No existía lógica de negocio.
+
+No existían:
+
+- Estudiantes
+- Matrículas
+- Pagos
+- Asistencia
+- Incidentes
+- Dashboard
+- RabbitMQ funcional
+- JWT
+- CRUD
+
+Todo eso se desarrollaría por fases.
+
+---
+
+# Estado del proyecto
+
+## Fase 1
+
+✅ COMPLETADA
+
+Objetivo:
+
+Crear toda la base técnica del proyecto.
+
+Resultado:
+
+Proyecto compilable con la arquitectura definitiva.
+
+---
+
+# Próxima fase
+
+## Fase 2
+
+Implementar Academic Service.
+
+Este sería el primer microservicio funcional.
+
+Debe contener:
+
+- Student Entity
+- Enrollment Entity
+- DTO
+- Repository
+- Service
+- Controller
+- Swagger
+- MySQL
+- Validaciones
+- Manejo de excepciones
+
+AÚN NO conectar RabbitMQ.
+
+Primero debe funcionar completamente el CRUD académico.
+
+---
+
+# Orden de desarrollo
+
+Fase 2
+
+Academic Service
+
+↓
+
+Fase 3
+
+Payment Service
+
+↓
+
+Fase 4
+
+RabbitMQ
+
+↓
+
+Fase 5
+
+Notification Service
+
+↓
+
+Fase 6
+
+Attendance Service
+
+↓
+
+Fase 7
+
+Analytics Service
+
+↓
+
+Fase 8
+
+Frontend
+
+↓
+
+Fase 9
+
+Docker Compose final
+
+↓
+
+Fase 10
+
+DLQ
+
+Idempotencia
+
+Logs
+
+Health Checks
+
+---
+
+# Convenciones
+
+Paquete base:
+
+```
+ec.edu.udla.campusconnect
+```
+
+Ejemplo:
+
+```
+ec.edu.udla.campusconnect.academic
+```
+
+---
+
+# Importante
+
+NO cambiar la estructura del proyecto.
+
+NO crear nuevos microservicios.
+
+NO dividir nuevamente el frontend.
+
+NO cambiar nombres de carpetas.
+
+Mantener exactamente la arquitectura acordada.
+
+---
+
+# Forma de trabajar con IA
+
+Antes de generar código:
+
+1. Analizar la arquitectura.
+2. Explicar el plan.
+3. Esperar aprobación.
+4. Recién generar código.
+
+No implementar varias funcionalidades simultáneamente.
+
+Cada fase debe quedar funcionando antes de iniciar la siguiente.
+
+---
+
+# Objetivo de la siguiente sesión
+
+Desarrollar completamente Academic Service y dejarlo funcionando con MySQL y Swagger para utilizarlo como plantilla del resto de microservicios.
